@@ -1,0 +1,17 @@
+.land{
+	fill: rgba(0,0,0, 0.17);
+}
+
+.border{
+	stroke: rgba(255,255,255, 0.7);
+	fill: none;
+}
+
+.circle{
+	fill: rgba(255,0,0,1);
+  cursor: pointer;
+}
+
+.page{
+	background-color: #161616;
+}
