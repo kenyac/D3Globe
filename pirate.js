@@ -95,13 +95,14 @@ function convertToEuler(v0,v1,theta){
   return quarternionToEuler(q);
 }
 
-//500, 960
 
-var height = 750,
-    width = 800;
+var radius = Math.round(($(window).height() * 0.6) / 2);
+
+var height = radius * 2,
+    width = radius * 2;
 
 var projection = d3.geoOrthographic()
-    .scale(350)
+    .scale(radius)
     .translate([width / 2, height / 2])
     .clipAngle(90);
 
@@ -109,14 +110,22 @@ var path = d3.geoPath()
     .projection(projection);
 
 
-const config = {
+const config = [{
   center: [139.69, 35.69],
   radius: 2.5
-}
+}, {
+  center: [-75.69, 45.42],
+  radius: 2.5
+}]
+
+var cities = ["Tokyo", "Ottawa"]
 
 var svg = d3.select("body").append("svg")
     .attr("width", width)
-    .attr("height", height);
+    .attr("height", height)
+	.attr("id", "globe");
+
+$("#globe").css({"border-radius" : radius});
 
 var drag = d3.drag()
 			.on("start", dragstarted)
@@ -129,7 +138,8 @@ var geoCircle = d3.geoCircle();
 
 d3.json("world.json", function(error, world){
   if (error) throw error;
-
+	
+  
   svg.append("path")
       .datum(topojson.feature(world, world.objects.land))    
 	.style("pointer-events", "visible")
@@ -142,15 +152,17 @@ d3.json("world.json", function(error, world){
   		.datum(borders)
   		.attr("class", "base border")
   		.attr("d", path);
-
- 	circle = svg.append("path")  
-      	.datum({endAngle: 1.5})
- 		.style("pointer-events", "visible") 
- 		.on("mousedown", function() { d3.event.stopPropagation(); })
-		.on("click", clicked)
-      	.attr("class", "circle")
- 		.attr("id", "")
-      	.attr("d", d => path(geoCircle.center(config.center).radius(d.endAngle)())); 
+  
+  	for(var i = 0; i < config.length; i++){
+      circle[i] = svg.append("path")  
+          .datum({endAngle: 1.5})
+          .style("pointer-events", "visible") 
+          .on("mousedown", function() { d3.event.stopPropagation(); })
+          .on("click", clicked)
+          .attr("class", "circle")
+          .attr("id", cities[i])
+          .attr("d", d => path(geoCircle.center(config[i].center).radius(d.endAngle)()));
+    }
   
   
  
@@ -187,7 +199,7 @@ function dragged(){
 			.attr("d",path);
   svg.selectAll(".land").attr("d", path);
   svg.selectAll(".border").attr("d", path);
-  svg.selectAll(".circle").attr("d", d => path(geoCircle.center(config.center).radius(d.endAngle)()));
+  drawCircles();
 
 }
 
@@ -200,7 +212,7 @@ function dragended(){
 
  function clicked(){
     if (d3.event.defaultPrevented) return;
-      console.log("Tokyo");    
+      console.log(this.id);    
       
     var p = projection.invert(d3.mouse(this));
     var currentRotate = projection.rotate();
@@ -218,7 +230,7 @@ function dragended(){
           projection
             .rotate(r(t));
           path.projection(projection);
-          svg.selectAll(".circle").attr("d", d => path(geoCircle.center(config.center).radius(d.endAngle)()));
+          drawCircles();
           return path(d);
         }       
    })
@@ -230,5 +242,8 @@ function dragended(){
      
   }
  
-
-
+function drawCircles(){
+  for(var i = 0; i < config.length; i++){
+  svg.selectAll("#"+cities[i]).attr("d", d => path(geoCircle.center(config[i].center).radius(d.endAngle)()));
+  }
+}
